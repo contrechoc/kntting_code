@@ -1,3 +1,14 @@
+/*
+
+code for KH-940 knitter
+still very much work in progress
+
+
+https://github.com/contrechoc/kntting_code
+
+*/
+
+
 import ddf.minim.*;
 
 Minim minim;
@@ -8,7 +19,7 @@ AudioSample end;
 //
 PFont f, fSmall;
 
-String imageName = "mppt_graph.jpg";
+String imageName = "mppt_weave.jpg";
 
 import processing.serial.*; 
 
@@ -28,7 +39,7 @@ PImage img;
 int[][] imageData ;
 
 
-int imageOffSetX = 100;
+int imageOffSetX = 80;
 int imageOffSetY = 160;
 
 void setup() {
@@ -39,9 +50,7 @@ void setup() {
   f = createFont("Arial-BoldMT-24", 18);
   fSmall = createFont("ArialMT-10.vlw", 10);
   textFont(f);
-
-  //textAlign(CENTER, CENTER);
-
+ 
   makeSerialConnection();
 
   minim = new Minim(this);

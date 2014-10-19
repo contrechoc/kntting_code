@@ -2,14 +2,8 @@
 
 int getPixelArrayFromProcessing(){
 
-  detachInterrupt(encoder0PinA );
-  detachInterrupt(encoder0PinB );
-
-  // delay(5);//necessary, otherwise loss of data
-  // Serial.println(" getPixelArrayFromProcessing ");
-  // delay(5);//necessary, otherwise loss of data
-
-  //giveSound(5500);
+  detachInterrupt(encoderPinA );
+  detachInterrupt(encoderPinB );
 
   if ( imageWidthAskedFor == 0 ){
     //only now ask for image width
@@ -25,9 +19,7 @@ int getPixelArrayFromProcessing(){
     imageHeight = imageTours;
     Serial.println("^");
   }
-
-  //Serial.print("lines asking for will become: ");
-  //Serial.println(imageHeight);
+ 
 
   //ask the whole image, each tour
   while( pixelArrayCounter < imageHeight )
@@ -55,11 +47,9 @@ int getPixelArrayFromProcessing(){
 
   }
 
- // delay(10);
- // giveSirene(666);
- // Serial.println("All data inside");
-  attachInterrupt(encoder0PinA, counterAUp, CHANGE);
-  attachInterrupt(encoder0PinB, counterBUp, CHANGE);
+
+  attachInterrupt(encoderPinA, counterAUp, CHANGE);
+  attachInterrupt(encoderPinB, counterBUp, CHANGE);
 
   return imageDone;
 }
@@ -92,24 +82,11 @@ void  getImageWidth(){
     }
   }
   delay(30);
-  //giveSound(5700);
+ 
 
   imageWidth = serialdata[0]*100+serialdata[1]*10+serialdata[2];
   imageHeight = serialdata[3]*100+serialdata[4]*10+serialdata[5];
-  //shiftFactor =  serialdata[4];
-  
-/*
-  for (int i=0; i<3 ; i++)
-  {
-    Serial.print(i);
-    delay(20);
-    Serial.print("  - ");
-    delay(20);
-    Serial.println(  serialdata[i]);
-    delay(20);
-  }
-  */
-  
+ 
   delay(10);
   Serial.print(" image: w x h = ");
   delay(10);

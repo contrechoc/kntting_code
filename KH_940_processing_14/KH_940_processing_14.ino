@@ -1,6 +1,16 @@
-const int encoder0PinA = 5;
-const int encoder0PinB = 3;
-const int encoder0PinC = 4; // solenoids
+/*
+
+ code for KH-940 knitter
+ still very much work in progress
+ 
+ https://github.com/contrechoc/kntting_code
+ 
+ */
+
+
+const int encoderPinA = 5;
+const int encoderPinB = 3;
+const int encoderPinC = 4; // solenoids
 
 volatile int interruptA = 0;
 volatile int interruptB = 0;
@@ -53,10 +63,10 @@ volatile int amegaPinsArray[totalArrayFromSelenoids] = {
   22,24,26,28,30,32,34,36,37,35,33,31,29,27,25,23                                                                                                               };
 
 const int imageRows = 25;//200 divided by 8 
-const int imageTours = 200;//height
+const int imageTours = 205;//height
 unsigned char processingImage[imageRows][imageTours];// needles in one row: imageRows - number of lines in a knitting: imageTours
 
-
+// image for testing if in the mode to knit the image from this code only
 int pixelTestImage[2][60] = {
   {  
     1,1,1,1,0,0,1,0,1,1,
@@ -65,7 +75,7 @@ int pixelTestImage[2][60] = {
 
     1,0,0,0,0,0,0,1,1,1,
     0,0,0,0,0,0,0,0,0,0,
-    1,1,0,1,0,0,1,1,1,1,                      }
+    1,1,0,1,0,0,1,1,1,1,                        }
   ,
   {
     1,1,1,1,0,0,1,0,1,1,
@@ -74,11 +84,11 @@ int pixelTestImage[2][60] = {
 
     0,1,1,0,0,0,0,1,1,1,
     0,0,0,0,0,0,0,0,0,0,
-    1,1,0,1,0,0,1,1,1,1,                      }
+    1,1,0,1,0,0,1,1,1,1,                        }
 };
 
 
-
+// pixels for the tour to be knitted, will be refreshed at turning points
 int pixelBin[256] = {
 
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -108,24 +118,27 @@ int pixelBin[256] = {
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 };
 
-volatile int solenoidCounter = 8;
+
 
 void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(115200);
-  Serial.println(" Hello starting prep");
 
+  Serial.begin(115200);
+  Serial.println(" Knitter prep");
+
+  //initializing the picture memory
   for (int i = 0; i<imageRows; i++)
     for (int j = 0; j< imageTours; j++)
       processingImage[i][j] = B00000001;
 
+  //PIN for a speaker attached to give sound signals
   pinMode(7, OUTPUT);
 
-  pinMode(encoder0PinA,INPUT);
-  pinMode(encoder0PinB,INPUT);
-  pinMode(encoder0PinC,INPUT);
+  //needle sensors pinMode
+  pinMode(encoderPinA,INPUT);
+  pinMode(encoderPinB,INPUT);
+  pinMode(encoderPinC,INPUT);
 
-  //solenoids
+  //solenoids pinMode
   for(int i=0; i<16; i++){
     pinMode(amegaPinsArray[i], OUTPUT);
     digitalWrite(amegaPinsArray[i], 0);
@@ -140,13 +153,15 @@ void setup() {
   // Serial.println(" Hello 2");
   delay(10);
 
-  attachInterrupt(encoder0PinA, counterAUp, CHANGE);
-  attachInterrupt(encoder0PinB, counterBUp, CHANGE);
-  attachInterrupt(encoder0PinC, counterCUp, CHANGE );
+  //defining the interrupt functions
+  attachInterrupt(encoderPinA, counterAUp, CHANGE);
+  attachInterrupt(encoderPinB, counterBUp, CHANGE);
+  attachInterrupt(encoderPinC, counterCUp, CHANGE );
 
   Serial.println(" Prep ready");
 }
 
+//function used to knit a circle in the mode of knitting an image from inside this script
 int dist(int x, int y, int m, int n , int r){
 
   if (  ( (x-m)*(x-m) + (y-n)*(y-n) ) < r*r )
@@ -156,16 +171,17 @@ int dist(int x, int y, int m, int n , int r){
 
 }
 
+// interrupt functions
 void counterAUp(){
   if ( firstTimer == 1 ){
-    if ( digitalRead (encoder0PinA)==HIGH )
+    if ( digitalRead (encoderPinA)==HIGH )
       printCounters(1);
     else 
       printCounters(3);
   }
 }
 void counterBUp(){
-  if ( digitalRead (encoder0PinB)==HIGH )
+  if ( digitalRead (encoderPinB)==HIGH )
     printCounters(4);
   else 
     printCounters(2);
@@ -176,27 +192,18 @@ void counterCUp(){
   if ( stopStart == 0 )
     if (abs( oldMyStitch - myStitch) > 7){
       stopStart = 1;
-      // Serial.print(" diff Stitch ");
-      // Serial.println( abs(myStitch) );
     }
   oldMyStitch = myStitch;
-  //interruptC++;
-  // serialPrint = 0;
+
 }
 
 
 void loop() {
 
-  if ( digitalRead(8)== HIGH){//transfer data of image now!
-    Serial.println("button");
-    getImageDataFromProcessingAfterWakingUp();
-  }
-
-
+  //start transferring data after some time to settle
   if ( timer < millis() &&  firstTimer == 0){ //needed for avoiding a first interrupt
     giveSound(8000);
     timer = millis()+interval;
-    Serial.println("time!");
     getImageDataFromProcessingAfterWakingUp();
   }
 
@@ -206,20 +213,22 @@ void loop() {
     giveSound(7500);
   }
 
+  //give some sounds at ARduino speaker after finishing the image
   if ( imageDone == 1 ){
-    
+
     giveSirene(5000);
-     delay(100);
-     giveSound(5000);
-     delay(100);
-     giveSound(5000);
-     delay(100);
-     giveSound(5000);
-     delay(100);
+    delay(100);
+    giveSound(5000);
+    delay(100);
+    giveSound(5000);
+    delay(100);
+    giveSound(5000);
+    delay(100);
 
   }
 }
 
+//
 void getImageDataFromProcessingAfterWakingUp(){
 
   delay(50);
@@ -237,45 +246,31 @@ void getImageDataFromProcessingAfterWakingUp(){
   arrayCounter = 0;///4th row to start
 }
 
-void giveSireneB(int b){
-  int beats = 9000;
-  for (int i=0;i<100;i++){
 
-    beats+=10;
-    digitalWrite(7, HIGH);
-
-    for(int i2 = 0 ; i2<beats ;i2++) //do this 100 times, so lowering this number gives a higher pitch!
-      __asm__("nop\n\t"); 
-
-    digitalWrite(7, LOW);
-    for(int i2 = 0 ; i2<beats ;i2++) //do this 100 times, so lowering this number gives a higher pitch!
-      __asm__("nop\n\t"); 
-  }
-}
 
 void printCounters(int numCode){ //on an interrrupt
 
   //left - right pos
-  if (  (numCode == 1 ) &&  (analogRead(1) > 500) && (digitalRead(encoder0PinB) == HIGH)){
+  if (  (numCode == 1 ) &&  (analogRead(1) > 500) && (digitalRead(encoderPinB) == HIGH)){
     Serial.print( " right  ");
     myStitch = 0;//wiil be ++ ed
     stopLimit = 1; //start tracking how much there is in the solenoid HIGH or LOW's
     needleDiff = 0;
-    if ( digitalRead(encoder0PinC) == HIGH) highLow = 1; 
+    if ( digitalRead(encoderPinC) == HIGH) highLow = 1; 
     else  highLow = 0;
   }
-  if (  (numCode == 3 ) &&  (analogRead(0) > 500) && (digitalRead(encoder0PinB) == HIGH))
+  if (  (numCode == 3 ) &&  (analogRead(0) > 500) && (digitalRead(encoderPinB) == HIGH))
   {
     Serial.print( " --> left    ");
     myStitch = 201; //will be -- ed
     stopLimit = 1; //start tracking how much there is in the solenoid HIGH or LOW's
     needleDiff = 0;
-    if ( digitalRead(encoder0PinC) == HIGH) highLow = 1; 
+    if ( digitalRead(encoderPinC) == HIGH) highLow = 1; 
     else  highLow = 0;
   }
 
   if ( stopLimit == 1){
-    if ( highLow != digitalRead(encoder0PinC) ){
+    if ( highLow != digitalRead(encoderPinC) ){
       stopLimit = 0;
       Serial.print("d-ep = ");
       Serial.println(needleDiff);
@@ -324,20 +319,25 @@ void printCounters(int numCode){ //on an interrrupt
   if ( abs( oldNumCode - numCode)>1 ) {//possible return
     if ( abs( oldNumCode - numCode)!=3 ) {//continuing
 
-      if ( turningNeedlePoint == 1 ) //passed the middle point to prevent getting new tours when you go to and fro at the side
-      {
-        if ( dirSlider == 0 ){//right
-          dirSlider = 1;
-          //  Serial.println( "r" );
+
+      if ( dirSlider == 0 ){//right
+        dirSlider = 1;
+        //  Serial.println( "r" );
+        if ( turningNeedlePoint == 1 ) {//passed the middle point to prevent getting new tours when you go to and fro at the side
+
           changeArray(1);
           turningNeedlePoint = 0;
         }
-        else{//left
-          dirSlider = 0;
-          // Serial.println("l" );
+      }
+      else{//left
+        dirSlider = 0;
+        // Serial.println("l" );
+        if ( turningNeedlePoint == 1 ) //passed the middle point to prevent getting new tours when you go to and fro at the side
+        {
           changeArray(2);
           turningNeedlePoint = 0;
         }
+
       }
     }
     else
@@ -424,6 +424,7 @@ void stitchCounting(){
   }
 }
 
+//sound functions for speaker
 void giveSound(int beats){
 
   for (int i=0;i<30;i++){
@@ -438,6 +439,7 @@ void giveSound(int beats){
   }
 }
 
+//sound functions for speaker
 void giveSirene(int b){
   int beats = 9600;
   for (int i=0;i<100;i++){
@@ -450,6 +452,24 @@ void giveSirene(int b){
       __asm__("nop\n\t"); 
   }
 }
+
+//sound functions for speaker
+void giveSireneB(int b){
+  int beats = 9000;
+  for (int i=0;i<100;i++){
+
+    beats+=10;
+    digitalWrite(7, HIGH);
+
+    for(int i2 = 0 ; i2<beats ;i2++) //do this 100 times, so lowering this number gives a higher pitch!
+      __asm__("nop\n\t"); 
+
+    digitalWrite(7, LOW);
+    for(int i2 = 0 ; i2<beats ;i2++) //do this 100 times, so lowering this number gives a higher pitch!
+      __asm__("nop\n\t"); 
+  }
+}
+
 
 
 

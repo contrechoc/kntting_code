@@ -1,6 +1,6 @@
 void highlightActiveTour(int whichTour) {
   int c = 0;
-  int d = 5;
+  int d = 3;
   fill(255, 255, 0, 100);
   rect( imageOffSetX+ c*d + d, imageOffSetY+ (whichTour+1)* d, imageWidth*d, d );
 
@@ -15,7 +15,7 @@ void highlightActiveTour(int whichTour) {
 void drawTestImage(String inputString) {
   //println ("drawTestImage "+ inputString);
   int c = 1;
-  int d = 5;
+  int d = 3;
   
   for ( int i = 1; i < 200 ; i++) {
     //indicators
@@ -62,7 +62,7 @@ void drawTestImage(String inputString) {
 void drawKnitImage(String inputString, int whichSide) {
   println ("drawKnitImage "+ inputString);
   int c = 0;
-  int d = 5;
+  int d = 3;
   for ( int i = 0; i < 200 ; i++) {
     int whichNumer = int(inputString.substring(i, i+1));
     if ( whichNumer == 0) {
